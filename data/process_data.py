@@ -22,7 +22,8 @@ def clean_data(df):
         categories[column] = categories[column].apply(pd.to_numeric)
     df.drop(columns=['categories'],inplace=True)
     df = pd.concat([df,categories], axis=1, join="outer")
-    df.drop_duplicates(inplace=True) 
+    df.drop_duplicates(inplace=True)
+    df.loc[df.related == 2, 'related'] = 0
     return df
 
 def save_data(df, database_filename):

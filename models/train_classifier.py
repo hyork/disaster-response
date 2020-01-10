@@ -13,6 +13,7 @@ from nltk.stem import WordNetLemmatizer
 
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -47,7 +48,13 @@ def build_model():
         ('tfidf', TfidfTransformer()),
         ('clf', MultiOutputClassifier(RandomForestClassifier()))
     ])
-    return pipeline
+    parameters = {
+        'vect__ngram_range': ((1, 1), (1, 2)),
+        'vect__max_df': (0.5, 0.75, 1.0),
+    }
+
+    cv = GridSearchCV(pipeline, param_grid=parameters, refit=True)
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
@@ -76,8 +83,8 @@ def main():
         print('Evaluating model...')
         evaluate_model(model, X_test, Y_test, category_names)
 
-#         print('Saving model...\n    MODEL: {}'.format(model_filepath))
-#         save_model(model, model_filepath)
+        print('Saving model...\n    MODEL: {}'.format(model_filepath))
+        save_model(model, model_filepath)
 
         print('Trained model saved!')
 
