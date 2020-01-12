@@ -12,10 +12,9 @@ from nltk.stem import WordNetLemmatizer
 
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV
 
-from sklearn.multioutput import MultiOutputClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
 
@@ -24,7 +23,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 def load_data(database_filepath):
     engine = 'sqlite:///{}'.format(database_filepath)
-    df = pd.read_sql_table(database_filepath, engine)
+    df = pd.read_sql_table('DisasterResponse', engine)
     X = df['message']
     Y = df.drop(columns=['id','message','original','genre'])
     return X, Y, Y.columns.values
@@ -49,17 +48,17 @@ def build_model():
                         ('clf', OneVsRestClassifier(LinearSVC())),
                     ])
     # defining parameters for tuning 
-    parameters = {'clf__estimator__C': [0.1, 1, 10, 100, 1000],  
-                  'clf__estimator__dual':[True,False]
-                 }  
+    parameters = {  'clf__estimator__C': [0.1, 1, 10, 100, 1000],  
+                    'clf__estimator__dual':[True,False]
+                 }
     cv = GridSearchCV(pipeline, parameters, refit = True, verbose = 3)
-    return cv.best_estimator_
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
     y_pred = model.predict(X_test)
-    print(classification_report(model, Y_test, y_pred, target_names=category_names))
-    print(accuracy_score(y_test, rf_y_pred))
+    print(classification_report(Y_test, y_pred, target_names=category_names))
+    print(accuracy_score(Y_test, y_pred))
 
 
 def save_model(model, model_filepath):

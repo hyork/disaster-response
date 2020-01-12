@@ -1,8 +1,21 @@
 import sys
+
+#import libraries
 import pandas as pd
 from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
+    """ 
+    Load messages and categories csv and create a dataframe.
+    
+    Parameters: 
+    messages_filepath (str): Path to messages.csv
+    categories_filepath (str): Path to categories.csv
+  
+    Returns: 
+    (pandas.Dataframe) Dataframe with both messages and categories
+    
+    """
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = pd.merge(messages, categories, on='id',how='outer')
@@ -28,7 +41,7 @@ def clean_data(df):
 
 def save_data(df, database_filename):
     engine = create_engine('sqlite:///{}'.format(database_filename))
-    df.to_sql(database_filename, engine, index=False)
+    df.to_sql('DisasterResponse', engine, index=False)
 
 
 def main():
