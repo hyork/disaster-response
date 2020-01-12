@@ -4,7 +4,6 @@ import sys
 import nltk
 nltk.download(['punkt', 'wordnet'])
 
-import re
 import numpy as np
 import pandas as pd
 import pickle
@@ -12,15 +11,16 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV
+
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.svm import LinearSVC
+
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sqlalchemy import create_engine
-
 
 def load_data(database_filepath):
     engine = 'sqlite:///{}'.format(database_filepath)
@@ -44,23 +44,22 @@ def tokenize(text):
 
 def build_model():
     pipeline = Pipeline([
-        ('vect', CountVectorizer(tokenizer=tokenize)),
-        ('tfidf', TfidfTransformer()),
-        ('clf', MultiOutputClassifier(RandomForestClassifier()))
-    ])
-    parameters = {
-        'vect__ngram_range': ((1, 1), (1, 2)),
-        'vect__max_df': (0.5, 0.75, 1.0),
-    }
-
-    cv = GridSearchCV(pipeline, param_grid=parameters, refit=True)
-    return cv
+                        ('vect', CountVectorizer(tokenizer=tokenize)),
+                        ('tfidf', TfidfTransformer()),
+                        ('clf', OneVsRestClassifier(LinearSVC())),
+                    ])
+    # defining parameters for tuning 
+    parameters = {'clf__estimator__C': [0.1, 1, 10, 100, 1000],  
+                  'clf__estimator__dual':[True,False]
+                 }  
+    cv = GridSearchCV(pipeline, parameters, refit = True, verbose = 3)
+    return cv.best_estimator_
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
     y_pred = model.predict(X_test)
-    accuracy = (y_pred == Y_test).mean()
-    print(accuracy)
+    print(classification_report(model, Y_test, y_pred, target_names=category_names))
+    print(accuracy_score(y_test, rf_y_pred))
 
 
 def save_model(model, model_filepath):
