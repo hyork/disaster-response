@@ -28,8 +28,6 @@ def tokenize(text):
 # load data
 engine = create_engine('sqlite:///../data/DisasterResponse.db')
 df = pd.read_sql_table('DisasterResponse', engine)
-# engine = 'sqlite:///{}'.format(database_filepath)
-# df = pd.read_sql_table(database_filepath, engine)
 
 # load model
 model = joblib.load("../models/classifier.pkl")
@@ -42,28 +40,47 @@ def index():
     
     # extract data needed for visuals
     # TODO: Below is an example - modify to extract data for your own visuals
-    genre_counts = df.groupby('genre').count()['message']
-    genre_names = list(genre_counts.index)
+    df_category = df.drop(['id','genre','message','original'], axis=1)
+    columns = df_category.columns
+    cat_total = []
+    for category in columns:
+        cat_total.append((category,df_category[category].sum()))
+    category_total = pd.DataFrame(cat_total, columns=['category','number of messages'])
+    category_total.sort_values(by=['number of messages'],inplace=True, ascending=False)
+    message_length = df[df['message'].str.len() < 2000]['message'].str.len()
     
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
                 Bar(
-                    x=genre_names,
-                    y=genre_counts
+                    x=category_total['category'],
+                    y=category_total['number of messages']
                 )
             ],
 
             'layout': {
-                'title': 'Distribution of Message Genres',
+                'title': 'Messages by Category',
                 'yaxis': {
                     'title': "Count"
                 },
                 'xaxis': {
-                    'title': "Genre"
+                    'title': "Category"
                 }
+            }
+        },
+        {
+            'data': [
+                {
+                    "x": message_length,
+                    "autobinx": 'true',
+                    "type": "histogram"
+                }
+            ],
+            'layout': {
+                'title': 'Message Length Distribution',
+                'width': 1000,
+                'height': 600
             }
         }
     ]
