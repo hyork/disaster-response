@@ -22,11 +22,24 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
 def load_data(database_filepath):
+    """ 
+    Load data from a SQLite database
+    
+    Parameters: 
+    database_filepath (str): File path of the SQLite database, eg. 'DisasterResponse.db'
+  
+    Returns: 
+    X (DataFrame): DataFrame containing the messages
+    Y (DataFrame): DataFrame containing the categories
+    categories (array): Array of category names
+    
+    """
     engine = 'sqlite:///{}'.format(database_filepath)
     df = pd.read_sql_table('DisasterResponse', engine)
     X = df['message']
     Y = df.drop(columns=['id','message','original','genre'])
-    return X, Y, Y.columns.values
+    categories = Y.columns.values
+    return X, Y, categories
 
 
 def tokenize(text):
@@ -42,6 +55,13 @@ def tokenize(text):
 
 
 def build_model():
+    """ 
+    Build a supervised multi-label classification model
+  
+    Returns: 
+    Classification Pipeline
+    
+    """
     pipeline = Pipeline([
                         ('vect', CountVectorizer(tokenizer=tokenize)),
                         ('tfidf', TfidfTransformer()),
@@ -56,12 +76,30 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """ 
+    Print accuracy score, precision, recall, and f1 score for each category
+    
+    Parameters: 
+    model : Model returned from build_model()
+    X_test (Array): Feature test set 
+    Y_test (Array) : Category test set
+    category_names (Array): Category names
+    
+    """
     y_pred = model.predict(X_test)
     print(classification_report(Y_test, y_pred, target_names=category_names))
     print(accuracy_score(Y_test, y_pred))
 
 
 def save_model(model, model_filepath):
+    """ 
+    Save model into a pickle file
+    
+    Parameters: 
+    model: Model returned from build_model() function
+    model_filepath (str): File name of the pickle file, eg. 'classifier.pkl'
+    
+    """
     pickle.dump(model, open(model_filepath, 'wb'))
 
 

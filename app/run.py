@@ -39,7 +39,6 @@ model = joblib.load("../models/classifier.pkl")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
     df_category = df.drop(['id','genre','message','original'], axis=1)
     columns = df_category.columns
     cat_total = []

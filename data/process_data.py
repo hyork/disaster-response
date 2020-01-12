@@ -13,7 +13,7 @@ def load_data(messages_filepath, categories_filepath):
     categories_filepath (str): Path to categories.csv
   
     Returns: 
-    (pandas.Dataframe) Dataframe with both messages and categories
+    DataFrame: DataFrame with columns from both messages and categories
     
     """
     messages = pd.read_csv(messages_filepath)
@@ -23,6 +23,15 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
+    """
+    Function to clean disaster response data 
+
+    Parameters: 
+        df (DataFrame): DataFrame loaded in using loaddata() function
+      
+    Returns: 
+        DataFrame: Cleaned data ready to be saved to database
+    """
     categories = df['categories']
     categories = categories.str.split(';',expand=True)
     category_colnames = categories[:1].apply(lambda x: x.str.slice(0,-2,1)).values
@@ -40,6 +49,14 @@ def clean_data(df):
     return df
 
 def save_data(df, database_filename):
+    """
+    Function to create a SQLite database and save cleaned data into that database 
+
+    Parameters: 
+        df (DataFrame): DataFrame returned from clean_data() function
+        database_filename (str): File path to save the database into, eg. 'DisasterResponse.db'
+
+    """
     engine = create_engine('sqlite:///{}'.format(database_filename))
     df.to_sql('DisasterResponse', engine, index=False)
 
